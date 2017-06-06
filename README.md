@@ -6,6 +6,14 @@ Package provides java implementation of big-data genetic programming for Apache 
 
 Add the following dependency to your POM file:
 
+```xml
+<dependency>
+  <groupId>com.github.chen0040</groupId>
+  <artifactId>spark-ml-genetic-programming</artifactId>
+  <version>1.0.1</version>
+</dependency>
+```
+
 # Features
 
 * Linear Genetic Programming
