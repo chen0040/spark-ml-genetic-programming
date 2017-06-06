@@ -255,8 +255,8 @@ tgp.getOperatorSet().addAll(new Plus(), new Minus(), new Divide(), new Multiply(
 tgp.getOperatorSet().addIfLessThanOperator();
 tgp.addConstants(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
 tgp.setVariableCount(2); // equal to the number of input parameter in an observation
-tgp.setPerObservationCostEvaluator((Function<Tuple2<Program, BasicObservation>, Double>) tuple2 -> {
- Program program = tuple2._1();
+tgp.setPerObservationCostEvaluator(tuple2 -> {
+ Solution program = tuple2._1();
  BasicObservation observation = tuple2._2();
  program.execute(observation);
  return Math.pow(observation.getOutput(0) - observation.getPredictedOutput(0), 2.0);

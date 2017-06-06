@@ -37,6 +37,12 @@ public class SparkTreeGP extends TreeGP {
       }
    }
 
+   @Override
+   public int getTreeCountPerSolution(){
+      return observationRdd.first().outputCount();
+   }
+
+   @Override
    public double evaluateCost(Solution solution) {
       JavaSparkContext context = JavaSparkContext.fromSparkContext(observationRdd.context());
       Broadcast<Solution> solutionBroadcast = context.broadcast(solution);
