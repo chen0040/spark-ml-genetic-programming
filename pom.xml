@@ -533,6 +533,12 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <dependency>
+            <groupId>com.github.chen0040</groupId>
+            <artifactId>java-genetic-programming</artifactId>
+            <version>1.0.5</version>
+        </dependency>
     </dependencies>
 
 </project>
