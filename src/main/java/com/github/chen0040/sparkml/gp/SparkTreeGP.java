@@ -2,8 +2,9 @@ package com.github.chen0040.sparkml.gp;
 
 
 import com.github.chen0040.gp.commons.BasicObservation;
-import com.github.chen0040.gp.lgp.LGP;
-import com.github.chen0040.gp.lgp.program.Program;
+import com.github.chen0040.gp.treegp.TreeGP;
+import com.github.chen0040.gp.treegp.program.Program;
+import com.github.chen0040.gp.treegp.program.Solution;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
@@ -14,13 +15,13 @@ import scala.Tuple2;
 /**
  * Created by xschen on 6/6/2017.
  */
-public class SparkLGP extends LGP {
+public class SparkTreeGP extends TreeGP {
 
    private JavaRDD<BasicObservation> observationRdd;
 
-   private Function<Tuple2<Program, BasicObservation>, Double> perObservationCostEvaluator;
+   private Function<Tuple2<Solution, BasicObservation>, Double> perObservationCostEvaluator;
 
-   public void setPerObservationCostEvaluator(Function<Tuple2<Program, BasicObservation>, Double> perObservationCostEvaluator) {
+   public void setPerObservationCostEvaluator(Function<Tuple2<Solution, BasicObservation>, Double> perObservationCostEvaluator) {
       this.perObservationCostEvaluator = perObservationCostEvaluator;
    }
 
@@ -36,19 +37,15 @@ public class SparkLGP extends LGP {
       }
    }
 
-
-   @Override
-   public double evaluateCost(Program program) {
-      program.markStructuralIntrons(this);
-      program = program.makeEffectiveCopy();
-
+   public double evaluateCost(Solution solution) {
       JavaSparkContext context = JavaSparkContext.fromSparkContext(observationRdd.context());
-      Broadcast<Program> programBroadcast = context.broadcast(program);
+      Broadcast<Solution> solutionBroadcast = context.broadcast(solution);
       double cost = observationRdd.map(observation -> {
-         Program p = programBroadcast.getValue();
+         Solution p = solutionBroadcast.getValue();
          return new Tuple2<>(p, observation);
       }).map(perObservationCostEvaluator).reduce((a, b) -> a + b);
-      programBroadcast.destroy();
+      solutionBroadcast.destroy();
       return cost;
    }
+
 }
