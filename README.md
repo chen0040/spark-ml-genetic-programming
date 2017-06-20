@@ -115,7 +115,7 @@ SparkLGP lgp = new SparkLGP();
 lgp.getOperatorSet().addAll(new Plus(), new Minus(), new Divide(), new Multiply(), new Power());
 lgp.getOperatorSet().addIfLessThanOperator();
 lgp.addConstants(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-lgp.setRegisterCount(6);
+lgp.setRegisterCount(6); // the number of register here is the number of input dimension of the training data times 3
 lgp.setPerObservationCostEvaluator((Function<Tuple2<Program, BasicObservation>, Double>) tuple2 -> {
  Program program = tuple2._1();
  BasicObservation observation = tuple2._2();
@@ -129,6 +129,12 @@ JavaSparkContext context = SparkContextFactory.createSparkContext("testing-1");
 Program program = lgp.fit(context.parallelize(trainingData)); 
 System.out.println(program);
 ```
+
+The number of registers of a linea program is set by calling LGP.setRegisterCount(...), the number of registers is usually the a multiple of the 
+input dimension of a training data instance. For example if the training data has input (x, y) which is 2 dimension, then the number of registers
+may be set to 6 = 2 * 3.
+
+The cost per observation evaluator computes the training cost of a 'program' on a particular 'observation' (which is an instance of trainingData).
 
 The last line prints the linear program found by the LGP evolution, a sample of which is shown below:
 
@@ -179,7 +185,7 @@ SparkTreeGP tgp = new SparkTreeGP();
 tgp.getOperatorSet().addAll(new Plus(), new Minus(), new Divide(), new Multiply(), new Power());
 tgp.getOperatorSet().addIfLessThanOperator();
 tgp.addConstants(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-tgp.setVariableCount(2); // equal to the number of input parameter in an observation
+tgp.setVariableCount(2); //equal to the number of input dimension of the training data
 tgp.setPerObservationCostEvaluator(tuple2 -> {
  Solution program = tuple2._1();
  BasicObservation observation = tuple2._2();
@@ -191,6 +197,9 @@ tgp.setDisplayEvery(2); // display iteration result every 2 iterations
 JavaSparkContext context = SparkContextFactory.createSparkContext("testing-1");
 Solution program = tgp.fit(context.parallelize(trainingData));  
 ```
+
+
+The cost per observation evaluator computes the training cost of a 'program' on a particular 'observation' (which is an instance of trainingData).
 
 The program.mathExpress() call prints the TreeGP program found by the TreeGP evolution, a sample of which is shown below:
 
