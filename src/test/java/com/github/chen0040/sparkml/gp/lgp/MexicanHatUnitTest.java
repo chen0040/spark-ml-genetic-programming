@@ -11,10 +11,10 @@ import com.github.chen0040.gp.lgp.enums.LGPReplacementStrategy;
 import com.github.chen0040.gp.lgp.gp.Population;
 import com.github.chen0040.gp.lgp.program.Program;
 import com.github.chen0040.gp.lgp.program.operators.*;
+import com.github.chen0040.gp.services.Tutorials;
 import com.github.chen0040.gp.utils.CollectionUtils;
 import com.github.chen0040.sparkml.commons.SparkContextFactory;
 import com.github.chen0040.sparkml.gp.SparkLGP;
-import com.github.chen0040.sparkml.gp.utils.ProblemCatalogue;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 import org.slf4j.Logger;
@@ -23,6 +23,7 @@ import org.testng.annotations.Test;
 import scala.Tuple2;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 /**
@@ -38,7 +39,7 @@ public class MexicanHatUnitTest {
 
       boolean silent = false;
       
-      List<BasicObservation> data = ProblemCatalogue.mexican_hat();
+      List<BasicObservation> data = Tutorials.mexican_hat().stream().map(s -> (BasicObservation)s).collect(Collectors.toList());
       CollectionUtils.shuffle(data);
       TupleTwo<List<BasicObservation>, List<BasicObservation>> split_data = CollectionUtils.split(data, 0.9);
       List<BasicObservation> trainingData = split_data._1();
@@ -46,11 +47,8 @@ public class MexicanHatUnitTest {
 
       JavaSparkContext context = SparkContextFactory.createSparkContext("testing-1");
       SparkLGP lgp = createLGP();
-      lgp.setObservationRdd(context.parallelize(trainingData));
-
-      Population pop = train(lgp, silent);
-
-      Program program = pop.getGlobalBestProgram();
+      lgp.setDisplayEvery(2);
+      Program program = lgp.fit(context.parallelize(trainingData));
       logger.info("global: {}", program);
 
       test(program, testingData, silent);
@@ -86,30 +84,13 @@ public class MexicanHatUnitTest {
       return lgp;
    }
 
-   private Population train(LGP lgp, boolean silent) {
-      long startTime = System.currentTimeMillis();
-      Population pop = lgp.newPopulation();
-      pop.initialize();
-      while (!pop.isTerminated())
-      {
-         pop.evolve();
-         if(!silent) {
-            logger.info("Mexican Hat Symbolic Regression Generation: {} (Pop: {}), elapsed: {} seconds", pop.getCurrentGeneration(),
-                    pop.size(),
-                    (System.currentTimeMillis() - startTime) / 1000);
-            logger.info("Global Cost: {}\tCurrent Cost: {}", pop.getGlobalBestProgram().getCost(), pop.getCostInCurrentGeneration());
-         }
-      }
-
-      return pop;
-   }
 
    @Test
    public void test_symbolic_regression_with_crossover_onePoint() {
 
       boolean silent = true;
 
-      List<BasicObservation> data = ProblemCatalogue.mexican_hat();
+      List<BasicObservation> data = Tutorials.mexican_hat().stream().map(s -> (BasicObservation)s).collect(Collectors.toList());
       CollectionUtils.shuffle(data);
       TupleTwo<List<BasicObservation>, List<BasicObservation>> split_data = CollectionUtils.split(data, 0.9);
       List<BasicObservation> trainingData = split_data._1();
@@ -117,12 +98,10 @@ public class MexicanHatUnitTest {
 
       JavaSparkContext context = SparkContextFactory.createSparkContext("testing-1");
       SparkLGP lgp = createLGP();
-      lgp.setObservationRdd(context.parallelize(trainingData));
+
       lgp.setCrossoverStrategy(LGPCrossoverStrategy.OnePoint);
 
-      Population pop = train(lgp, silent);
-
-      Program program = pop.getGlobalBestProgram();
+      Program program = lgp.fit(context.parallelize(trainingData));
 
       test(program, testingData, silent);
 
@@ -133,7 +112,7 @@ public class MexicanHatUnitTest {
 
       boolean silent = true;
 
-      List<BasicObservation> data = ProblemCatalogue.mexican_hat();
+      List<BasicObservation> data = Tutorials.mexican_hat().stream().map(s -> (BasicObservation)s).collect(Collectors.toList());
       CollectionUtils.shuffle(data);
       TupleTwo<List<BasicObservation>, List<BasicObservation>> split_data = CollectionUtils.split(data, 0.9);
       List<BasicObservation> trainingData = split_data._1();
@@ -141,12 +120,9 @@ public class MexicanHatUnitTest {
 
       JavaSparkContext context = SparkContextFactory.createSparkContext("testing-1");
       SparkLGP lgp = createLGP();
-      lgp.setObservationRdd(context.parallelize(trainingData));
       lgp.setCrossoverStrategy(LGPCrossoverStrategy.OneSegment);
 
-      Population pop = train(lgp, silent);
-
-      Program program = pop.getGlobalBestProgram();
+      Program program = lgp.fit(context.parallelize(trainingData));
 
       test(program, testingData, silent);
 
@@ -157,7 +133,7 @@ public class MexicanHatUnitTest {
 
       boolean silent = true;
 
-      List<BasicObservation> data = ProblemCatalogue.mexican_hat();
+      List<BasicObservation> data = Tutorials.mexican_hat().stream().map(s -> (BasicObservation)s).collect(Collectors.toList());
       CollectionUtils.shuffle(data);
       TupleTwo<List<BasicObservation>, List<BasicObservation>> split_data = CollectionUtils.split(data, 0.9);
       List<BasicObservation> trainingData = split_data._1();
@@ -165,12 +141,9 @@ public class MexicanHatUnitTest {
 
       JavaSparkContext context = SparkContextFactory.createSparkContext("testing-1");
       SparkLGP lgp = createLGP();
-      lgp.setObservationRdd(context.parallelize(trainingData));
       lgp.setReplacementStrategy(LGPReplacementStrategy.DirectCompetition);
 
-      Population pop = train(lgp, silent);
-
-      Program program = pop.getGlobalBestProgram();
+      Program program = lgp.fit(context.parallelize(trainingData));
 
       test(program, testingData, silent);
 
@@ -182,7 +155,7 @@ public class MexicanHatUnitTest {
 
       boolean silent = true;
 
-      List<BasicObservation> data = ProblemCatalogue.mexican_hat();
+      List<BasicObservation> data = Tutorials.mexican_hat().stream().map(s -> (BasicObservation)s).collect(Collectors.toList());
       CollectionUtils.shuffle(data);
       TupleTwo<List<BasicObservation>, List<BasicObservation>> split_data = CollectionUtils.split(data, 0.9);
       List<BasicObservation> trainingData = split_data._1();
@@ -190,12 +163,9 @@ public class MexicanHatUnitTest {
 
       JavaSparkContext context = SparkContextFactory.createSparkContext("testing-1");
       SparkLGP lgp = createLGP();
-      lgp.setObservationRdd(context.parallelize(trainingData));
       lgp.setEffectiveMutation(true);
 
-      Population pop = train(lgp, silent);
-
-      Program program = pop.getGlobalBestProgram();
+      Program program = lgp.fit(context.parallelize(trainingData));
 
       test(program, testingData, silent);
 
@@ -206,7 +176,7 @@ public class MexicanHatUnitTest {
 
       boolean silent = true;
 
-      List<BasicObservation> data = ProblemCatalogue.mexican_hat();
+      List<BasicObservation> data = Tutorials.mexican_hat().stream().map(s -> (BasicObservation)s).collect(Collectors.toList());
       CollectionUtils.shuffle(data);
       TupleTwo<List<BasicObservation>, List<BasicObservation>> split_data = CollectionUtils.split(data, 0.9);
       List<BasicObservation> trainingData = split_data._1();
@@ -214,12 +184,9 @@ public class MexicanHatUnitTest {
 
       JavaSparkContext context = SparkContextFactory.createSparkContext("testing-1");
       SparkLGP lgp = createLGP();
-      lgp.setObservationRdd(context.parallelize(trainingData));
       lgp.setProgramInitializationStrategy(LGPInitializationStrategy.ConstantLength);
 
-      Population pop = train(lgp, silent);
-
-      Program program = pop.getGlobalBestProgram();
+      Program program = lgp.fit(context.parallelize(trainingData));
 
       test(program, testingData, silent);
 

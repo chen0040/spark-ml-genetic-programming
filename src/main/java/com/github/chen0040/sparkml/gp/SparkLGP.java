@@ -3,6 +3,7 @@ package com.github.chen0040.sparkml.gp;
 
 import com.github.chen0040.gp.commons.BasicObservation;
 import com.github.chen0040.gp.lgp.LGP;
+import com.github.chen0040.gp.lgp.gp.Population;
 import com.github.chen0040.gp.lgp.program.Program;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -50,5 +51,23 @@ public class SparkLGP extends LGP {
       }).map(perObservationCostEvaluator).reduce((a, b) -> a + b);
       programBroadcast.destroy();
       return cost;
+   }
+
+   public Program fit(JavaRDD<BasicObservation> trainingData) {
+      setObservationRdd(trainingData);
+
+      long startTime = System.currentTimeMillis();
+      Population pop = this.newPopulation();
+      pop.initialize();
+      while (!pop.isTerminated())
+      {
+         pop.evolve();
+         if(getDisplayEvery() > 0 && pop.getCurrentGeneration() % getDisplayEvery() == 0) {
+            long seconds = (System.currentTimeMillis() - startTime) / 1000;
+            System.out.println("Generation: " + pop.getCurrentGeneration() + " (Pop: " + pop.size() + "), elapsed: " + seconds + " seconds");
+            System.out.println("Global Cost: " + pop.getGlobalBestProgram().getCost() + "\tCurrent Cost: " + pop.getCostInCurrentGeneration());
+         }
+      }
+      return pop.getGlobalBestProgram();
    }
 }

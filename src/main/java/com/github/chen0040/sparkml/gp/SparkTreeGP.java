@@ -3,6 +3,7 @@ package com.github.chen0040.sparkml.gp;
 
 import com.github.chen0040.gp.commons.BasicObservation;
 import com.github.chen0040.gp.treegp.TreeGP;
+import com.github.chen0040.gp.treegp.gp.Population;
 import com.github.chen0040.gp.treegp.program.Program;
 import com.github.chen0040.gp.treegp.program.Solution;
 import org.apache.spark.api.java.JavaRDD;
@@ -52,6 +53,23 @@ public class SparkTreeGP extends TreeGP {
       }).map(perObservationCostEvaluator).reduce((a, b) -> a + b);
       solutionBroadcast.destroy();
       return cost;
+   }
+
+   public Solution fit(JavaRDD<BasicObservation> trainingData) {
+      setObservationRdd(trainingData);
+      long startTime = System.currentTimeMillis();
+      Population pop = this.newPopulation();
+      pop.initialize();
+      while (!pop.isTerminated())
+      {
+         pop.evolve();
+         if(getDisplayEvery() > 0 && pop.getCurrentGeneration() % getDisplayEvery() == 0) {
+            long seconds = (System.currentTimeMillis() - startTime) / 1000;
+            System.out.println("Generation: " + pop.getCurrentGeneration() + " (Pop: " + pop.size() + "), elapsed: " + seconds + " seconds");
+            System.out.println("Global Cost: " + pop.getGlobalBestSolution().getCost() + "\tCurrent Cost: " + pop.getCostInCurrentGeneration());
+         }
+      }
+      return pop.getGlobalBestSolution();
    }
 
 }
