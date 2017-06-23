@@ -45,10 +45,13 @@ public class SparkLGP extends LGP {
 
       JavaSparkContext context = JavaSparkContext.fromSparkContext(observationRdd.context());
       Broadcast<Program> programBroadcast = context.broadcast(program);
-      double cost = observationRdd.map(observation -> {
+      Tuple2<Double, Integer> result = observationRdd.map(observation -> {
          Program p = programBroadcast.getValue();
          return new Tuple2<>(p, observation);
-      }).map(perObservationCostEvaluator).reduce((a, b) -> a + b);
+      }).map(perObservationCostEvaluator)
+              .map(a -> new Tuple2<>(a, 1))
+              .reduce((a, b) -> new Tuple2<>(a._1() + b._1(), a._2() + b._2()));
+      double cost = result._1() / result._2();
       programBroadcast.destroy();
       return cost;
    }
